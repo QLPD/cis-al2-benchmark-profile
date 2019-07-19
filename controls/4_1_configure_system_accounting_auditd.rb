@@ -217,9 +217,7 @@ control 'cis-dil-benchmark-4.1.8' do
   only_if { cis_level == 2 }
 
   describe file('/etc/audit/audit.rules') do
-    its(:content) { should match(%r{^-w /var/log/faillog -p wa -k logins$}) }
     its(:content) { should match(%r{^-w /var/log/lastlog -p wa -k logins$}) }
-    its(:content) { should match(%r{^-w /var/log/tallylog -p wa -k logins$}) }
   end
 end
 
