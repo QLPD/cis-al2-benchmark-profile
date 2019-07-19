@@ -15,106 +15,326 @@
 #
 # author: Kristian Vlaardingerbroek
 
-title '5.3 Configure PAM'
+cis_level = attribute('cis_level')
 
-control 'cis-dil-benchmark-5.3.1' do # rubocop:disable Metrics/BlockLength
-  title 'Ensure password creation requirements are configured'
-  desc "The pam_cracklib.so module checks the strength of passwords. It performs checks such as making sure a password is not a dictionary word, it is a certain length, contains a mix of characters (e.g. alphabet, numeric, other) and more. The following are definitions of the pam_cracklib.so options.\n\n* try_first_pass - retrieve the password from a previous stacked PAM module. If not available, then prompt the user for a password.\n* retry=3 - Allow 3 tries before sending back a failure.\n* minlen=14 - password must be 14 characters or more\n* dcredit=-1 - provide at least one digit\n* ucredit=-1 - provide at least one uppercase character\n* ocredit=-1 - provide at least one special character\n* lcredit=-1 - provide at least one lowercase character\n\nThe pam_pwquality.so module functions similarly but the minlen , dcredit , ucredit , ocredit , and lcredit parameters are stored in the /etc/security/pwquality.conf file. The settings shown above are one possible policy. Alter these values to conform to your own organization's password policies.\n\nRationale: Strong passwords protect systems from being hacked through brute force methods."
-  impact 1.0
+title '6.1 System File Permissions'
 
-  tag cis: 'distribution-independent-linux:5.3.1'
-  tag level: 1
-
-  if package('pam_cracklib').installed?
-    describe.one do
-      %w(common-password system-auth).each do |f|
-        describe file("/etc/pam.d/#{f}") do
-          its(:content) { should match(/^password required pam_cracklib\.so (\S+\s+)*try_first_pass/) }
-          its(:content) { should match(/^password required pam_cracklib\.so (\S+\s+)*retry=[3210]/) }
-        end
-      end
-    end
-
-    describe.one do
-      %w(common-password system-auth).each do |f|
-        describe file("/etc/pam.d/#{f}") do
-          its(:content) { should match(/^password required pam_cracklib\.so (\S+\s+)*minlen=(1[4-9]|[2-9][0-9]|[1-9][0-9][0-9]+)/) }
-          its(:content) { should match(/^password required pam_cracklib\.so (\S+\s+)*dcredit=-[1-9][0-9]*\s*(?:#.*)?/) }
-          its(:content) { should match(/^password required pam_cracklib\.so (\S+\s+)*lcredit=-[1-9][0-9]*\s*(?:#.*)?/) }
-          its(:content) { should match(/^password required pam_cracklib\.so (\S+\s+)*ucredit=-[1-9][0-9]*\s*(?:#.*)?/) }
-          its(:content) { should match(/^password required pam_cracklib\.so (\S+\s+)*ocredit=-[1-9][0-9]*\s*(?:#.*)?/) }
-        end
-      end
-    end
-  end
-
-  if package('pam_passwdqc').installed? || package('libpwquality').installed?
-    describe.one do
-      %w(common-password system-auth).each do |f|
-        describe file("/etc/pam.d/#{f}") do
-          its(:content) { should match(/^password\s+requisite pam_pwquality\.so (\S+\s+)*retry=[3210]/) }
-          its(:content) { should match(/^password\s+requisite pam_pwquality\.so (\S+\s+)*try_first_pass/) }
-        end
-      end
-    end
-
-    describe file('/etc/security/pwquality.conf') do
-      its(:content) { should match(/^minlen = (1[4-9]|[2-9][0-9]|[1-9][0-9][0-9]+)\s*(?:#.*)?$/) }
-      its(:content) { should match(/^dcredit = -[1-9][0-9]*\s*(?:#.*)?$/) }
-      its(:content) { should match(/^lcredit = -[1-9][0-9]*\s*(?:#.*)?$/) }
-      its(:content) { should match(/^ucredit = -[1-9][0-9]*\s*(?:#.*)?$/) }
-      its(:content) { should match(/^ocredit = -[1-9][0-9]*\s*(?:#.*)?$/) }
-    end
-  end
-end
-
-control 'cis-dil-benchmark-5.3.2' do
-  title 'Ensure lockout for failed password attempts is configured'
-  desc  "Lock out users after n unsuccessful consecutive login attempts. The first sets of changes are made to the PAM configuration files. The second set of changes are applied to the program specific PAM configuration file. The second set of changes must be applied to each program that will lock out users. Check the documentation for each secondary program for instructions on how to configure them to work with PAM. Set the lockout number to the policy in effect at your site.\n\nRationale: Locking out user IDs after n unsuccessful consecutive login attempts mitigates brute force password attacks against your systems."
+control 'cis-dil-benchmark-6.1.1' do
+  title 'Audit system file permissions'
+  desc  "The RPM and Debian package manager have a number of useful options. One of these, the --verify (or -v for RPM) option, can be used to verify that system packages are correctly installed. The --verify option can be used to verify a particular package or to verify all system packages. If no output is returned, the package is installed correctly. The following table describes the meaning of output from the verify option: Code Meaning\nS File size differs.\nM File mode differs (includes permissions and file type).\n5 The MD5 checksum differs.\nD The major and minor version numbers differ on a device file.\nL A mismatch occurs in a link.\nU The file ownership differs.\nG The file group owner differs.\nT The file time (mtime) differs.\nThe rpm -qf or dpkg -S command can be used to determine which package a particular file belongs to. For example the following commands determines which package the /bin/bash file belongs to:\n# rpm -qf /bin/bash\nbash-4.1.2-29.el6.x86_64\n# dpkg -S /bin/bash\nbash: /bin/bash\nTo verify the settings for the package that controls the /bin/bash file, run the following:\n# rpm -V bash-4.1.2-29.el6.x86_64\n.M.......    /bin/bash\n# dpkg --verify bash\n??5?????? c /etc/bash.bashrc\nNote that you can feed the output of the rpm -qf command to the rpm -V command:\n# rpm -V `rpm -qf /etc/passwd`\n.M...... c /etc/passwd\nS.5....T c /etc/printcap\n\nRationale: It is important to confirm that packaged system files and directories are maintained with the permissions they were intended to have from the OS vendor."
   impact 0.0
 
-  tag cis: 'distribution-independent-linux:5.3.2'
-  tag level: 1
+  tag cis: 'distribution-independent-linux:6.1.1'
+  tag level: 2
 
-  describe 'cis-dil-benchmark-5.3.2' do
+  only_if {  cis_level == 2 }
+
+  describe 'cis-dil-benchmark-6.1.1' do
     skip 'Not implemented'
   end
 end
 
-control 'cis-dil-benchmark-5.3.3' do
-  title 'Ensure password reuse is limited'
-  desc  "The /etc/security/opasswd file stores the users' old passwords and can be checked to ensure that users are not recycling recent passwords.\n\nRationale: Forcing users not to reuse their past 5 passwords make it less likely that an attacker will be able to guess the password. Note that these change only apply to accounts configured on the local system."
-  impact 0.0
+control 'cis-dil-benchmark-6.1.2' do
+  title 'Ensure permissions on /etc/passwd are configured'
+  desc  "The /etc/passwd file contains user account information that is used by many system utilities and therefore must be readable for these utilities to operate.\n\nRationale: It is critical to ensure that the /etc/passwd file is protected from unauthorized write access. Although it is protected by default, the file permissions could be changed either inadvertently or through malicious actions."
+  impact 1.0
 
-  tag cis: 'distribution-independent-linux:5.3.3'
+  tag cis: 'distribution-independent-linux:6.1.2'
   tag level: 1
 
-  describe.one do
-    %w(common-password system-auth).each do |f|
-      describe file("/etc/pam.d/#{f}") do
-        its(:content) { should match(/^password\s+(\S+\s+)+pam_unix\.so (\S+\s+)*remember=([56789]|[1-9][0-9]+)/) }
-      end
+  passwd_files = ['/etc/passwd']
+  passwd_files << '/usr/share/baselayout/passwd' if file('/etc/nsswitch.conf').content =~ /^passwd:\s+(\S+\s+)*usrfiles/
 
-      describe file("/etc/pam.d/#{f}") do
-        its(:content) { should match(/^password\s+(\S+\s+)+pam_pwhistory\.so (\S+\s+)*remember=([56789]|[1-9][0-9]+)/) }
-      end
+  passwd_files.each do |f|
+    describe file(f) do
+      it { should exist }
+      it { should be_readable.by 'owner' }
+      it { should be_writable.by 'owner' }
+      it { should_not be_executable.by 'owner' }
+      it { should be_readable.by 'group' }
+      it { should_not be_writable.by 'group' }
+      it { should_not be_executable.by 'group' }
+      it { should be_readable.by 'other' }
+      it { should_not be_writable.by 'other' }
+      it { should_not be_executable.by 'other' }
+      its(:uid) { should cmp 0 }
+      its(:gid) { should cmp 0 }
+      its(:sticky) { should equal false }
+      its(:suid) { should equal false }
+      its(:sgid) { should equal false }
     end
   end
 end
 
-control 'cis-dil-benchmark-5.3.4' do
-  title 'Ensure password hashing algorithm is SHA-512'
-  desc  "The commands below change password encryption from md5 to sha512 (a much stronger hashing algorithm). All existing accounts will need to perform a password change to upgrade the stored hashes to the new algorithm.\n\nRationale: The SHA-512 algorithm provides much stronger hashing than MD5, thus providing additional protection to the system by increasing the level of effort for an attacker to successfully determine passwords. Note that these change only apply to accounts configured on the local system."
-  impact 0.0
+control 'cis-dil-benchmark-6.1.3' do
+  title 'Ensure permissions on /etc/shadow are configured'
+  desc  "The /etc/shadow file is used to store the information about user accounts that is critical to the security of those accounts, such as the hashed password and other security information.\n\nRationale: If attackers can gain read access to the /etc/shadow file, they can easily run a password cracking program against the hashed password to break it. Other security information that is stored in the /etc/shadow file (such as expiration) could also be useful to subvert the user accounts."
+  impact 1.0
 
-  tag cis: 'distribution-independent-linux:5.3.4'
+  tag cis: 'distribution-independent-linux:6.1.3'
   tag level: 1
 
-  describe.one do
-    %w(common-password system-auth password-auth).each do |f|
-      describe file("/etc/pam.d/#{f}") do
-        its(:content) { should match(/^password(\s+\S+\s+)+pam_unix\.so\s+(\S+\s+)*sha512/) }
-      end
+  shadow_files = ['/etc/shadow']
+  shadow_files << '/usr/share/baselayout/shadow' if file('/etc/nsswitch.conf').content =~ /^shadow:\s+(\S+\s+)*usrfiles/
+
+  expected_gid = 0
+  expected_gid = 42 if os.debian?
+
+  shadow_files.each do |f|
+    describe file(f) do
+      it { should exist }
+      it { should_not be_readable.by 'owner' }
+      it { should_not be_writable.by 'owner' }
+      it { should_not be_executable.by 'owner' }
+      it { should_not be_writable.by 'group' }
+      it { should_not be_executable.by 'group' }
+      it { should_not be_readable.by 'other' }
+      it { should_not be_writable.by 'other' }
+      it { should_not be_executable.by 'other' }
+      its(:uid) { should cmp 0 }
+      its(:gid) { should cmp expected_gid }
+      its(:sticky) { should equal false }
+      its(:suid) { should equal false }
+      its(:sgid) { should equal false }
     end
+  end
+end
+
+control 'cis-dil-benchmark-6.1.4' do
+  title 'Ensure permissions on /etc/group are configured'
+  desc  "The /etc/group file contains a list of all the valid groups defined in the system. The command below allows read/write access for root and read access for everyone else.\n\nRationale: The /etc/group file needs to be protected from unauthorized changes by non-privileged users, but needs to be readable as this information is used with many non-privileged programs."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.4'
+  tag level: 1
+
+  group_files = ['/etc/group']
+  group_files << '/usr/share/baselayout/group' if file('/etc/nsswitch.conf').content =~ /^group:\s+(\S+\s+)*usrfiles/
+
+  group_files.each do |f|
+    describe file(f) do
+      it { should exist }
+      it { should be_readable.by 'owner' }
+      it { should be_writable.by 'owner' }
+      it { should_not be_executable.by 'owner' }
+      it { should be_readable.by 'group' }
+      it { should_not be_writable.by 'group' }
+      it { should_not be_executable.by 'group' }
+      it { should be_readable.by 'other' }
+      it { should_not be_writable.by 'other' }
+      it { should_not be_executable.by 'other' }
+      its(:uid) { should cmp 0 }
+      its(:gid) { should cmp 0 }
+      its(:sticky) { should equal false }
+      its(:suid) { should equal false }
+      its(:sgid) { should equal false }
+    end
+  end
+end
+
+control 'cis-dil-benchmark-6.1.5' do
+  title 'Ensure permissions on /etc/gshadow are configured'
+  desc  "The /etc/gshadow file is used to store the information about groups that is critical to the security of those accounts, such as the hashed password and other security information.\n\nRationale: If attackers can gain read access to the /etc/gshadow file, they can easily run a password cracking program against the hashed password to break it. Other security information that is stored in the /etc/gshadow file (such as group administrators) could also be useful to subvert the group."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.5'
+  tag level: 1
+
+  gshadow_files = ['/etc/gshadow']
+  gshadow_files << '/usr/share/baselayout/gshadow' if file('/etc/nsswitch.conf').content =~ /^gshadow:\s+(\S+\s+)*usrfiles/
+
+  expected_gid = 0
+  expected_gid = 42 if os.debian?
+
+  gshadow_files.each do |f|
+    describe file(f) do
+      it { should exist }
+      it { should_not be_readable.by 'owner' }
+      it { should_not be_writable.by 'owner' }
+      it { should_not be_executable.by 'owner' }
+      it { should_not be_writable.by 'group' }
+      it { should_not be_executable.by 'group' }
+      it { should_not be_readable.by 'other' }
+      it { should_not be_writable.by 'other' }
+      it { should_not be_executable.by 'other' }
+      its(:uid) { should cmp 0 }
+      its(:gid) { should cmp expected_gid }
+      its(:sticky) { should equal false }
+      its(:suid) { should equal false }
+      its(:sgid) { should equal false }
+    end
+  end
+end
+
+control 'cis-dil-benchmark-6.1.6' do
+  title 'Ensure permissions on /etc/passwd- are configured'
+  desc  "The /etc/passwd- file contains backup user account information.\n\nRationale: It is critical to ensure that the /etc/passwd- file is protected from unauthorized access. Although it is protected by default, the file permissions could be changed either inadvertently or through malicious actions."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.6'
+  tag level: 1
+
+  describe file('/etc/passwd-') do
+    it { should exist }
+    it { should be_readable.by 'owner' }
+    it { should be_writable.by 'owner' }
+    it { should_not be_executable.by 'owner' }
+    it { should be_readable.by 'group' }
+    it { should_not be_writable.by 'group' }
+    it { should_not be_executable.by 'group' }
+    it { should be_readable.by 'other' }
+    it { should_not be_writable.by 'other' }
+    it { should_not be_executable.by 'other' }
+    its(:uid) { should cmp 0 }
+    its(:gid) { should cmp 0 }
+    its(:sticky) { should equal false }
+    its(:suid) { should equal false }
+    its(:sgid) { should equal false }
+  end
+end
+
+control 'cis-dil-benchmark-6.1.7' do
+  title 'Ensure permissions on /etc/shadow- are configured'
+  desc  "The  /etc/shadow-  file is used to store backup information about user accounts that is critical to the security of those accounts, such as the hashed password and other security information.\n\nRationale: It is critical to ensure that the /etc/shadow- file is protected from unauthorized access. Although it is protected by default, the file permissions could be changed either inadvertently or through malicious actions."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.7'
+  tag level: 1
+
+  describe file('/etc/shadow-') do
+    it { should exist }
+    it { should_not be_readable.by 'owner' }
+    it { should_not be_writable.by 'owner' }
+    it { should_not be_executable.by 'owner' }
+    it { should_not be_readable.by 'group' }
+    it { should_not be_writable.by 'group' }
+    it { should_not be_executable.by 'group' }
+    it { should_not be_readable.by 'other' }
+    it { should_not be_writable.by 'other' }
+    it { should_not be_executable.by 'other' }
+    its(:uid) { should cmp 0 }
+    its(:gid) { should cmp 0 }
+    its(:sticky) { should equal false }
+    its(:suid) { should equal false }
+    its(:sgid) { should equal false }
+  end
+end
+
+control 'cis-dil-benchmark-6.1.8' do
+  title 'Ensure permissions on /etc/group- are configured'
+  desc  "The /etc/group- file contains a backup list of all the valid groups defined in the system.\n\nRationale: It is critical to ensure that the /etc/group- file is protected from unauthorized access. Although it is protected by default, the file permissions could be changed either inadvertently or through malicious actions."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.8'
+  tag level: 1
+
+  describe file('/etc/group-') do
+    it { should exist }
+    it { should be_readable.by 'owner' }
+    it { should be_writable.by 'owner' }
+    it { should_not be_executable.by 'owner' }
+    it { should be_readable.by 'group' }
+    it { should_not be_writable.by 'group' }
+    it { should_not be_executable.by 'group' }
+    it { should be_readable.by 'other' }
+    it { should_not be_writable.by 'other' }
+    it { should_not be_executable.by 'other' }
+    its(:uid) { should cmp 0 }
+    its(:gid) { should cmp 0 }
+    its(:sticky) { should equal false }
+    its(:suid) { should equal false }
+    its(:sgid) { should equal false }
+  end
+end
+
+control 'cis-dil-benchmark-6.1.9' do
+  title 'Ensure permissions on /etc/gshadow- are configured'
+  desc  "The /etc/gshadow- file is used to store backup information about groups that is critical to the security of those accounts, such as the hashed password and other security information.\n\nRationale: It is critical to ensure that the /etc/gshadow- file is protected from unauthorized access. Although it is protected by default, the file permissions could be changed either inadvertently or through malicious actions."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.9'
+  tag level: 1
+
+  describe file('/etc/gshadow-') do
+    it { should exist }
+    it { should_not be_readable.by 'owner' }
+    it { should_not be_writable.by 'owner' }
+    it { should_not be_executable.by 'owner' }
+    it { should_not be_readable.by 'group' }
+    it { should_not be_writable.by 'group' }
+    it { should_not be_executable.by 'group' }
+    it { should_not be_readable.by 'other' }
+    it { should_not be_writable.by 'other' }
+    it { should_not be_executable.by 'other' }
+    its(:uid) { should cmp 0 }
+    its(:gid) { should cmp 0 }
+    its(:sticky) { should equal false }
+    its(:suid) { should equal false }
+    its(:sgid) { should equal false }
+  end
+end
+
+control 'cis-dil-benchmark-6.1.10' do
+  title 'Ensure no world writable files exist'
+  desc  "Unix-based systems support variable settings to control access to files. World writable files are the least secure. See the chmod(2) man page for more information.\n\nRationale: Data in world-writable files can be modified and compromised by any user on the system. World writable files may also indicate an incorrectly written script or program that could potentially be the cause of a larger compromise to the system's integrity."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.10'
+  tag level: 1
+
+  describe command("df --local -P | awk '{ if (NR!=1) print $6 }' | xargs -I '{}' find '{}' -xdev -type f -perm -0002") do
+    its(:stdout) { should eq '' }
+  end
+end
+
+control 'cis-dil-benchmark-6.1.11' do
+  title 'Ensure no unowned files or directories exist'
+  desc  "Sometimes when administrators delete users from the password file they neglect to remove all files owned by those users from the system.\n\nRationale: A new user who is assigned the deleted user's user ID or group ID may then end up \"owning\" these files, and thus have more access on the system than was intended."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.11'
+  tag level: 1
+
+  describe command("df --local -P | awk '{ if (NR!=1) print $6 }' | xargs -I '{}' find '{}' -xdev -nouser") do
+    its(:stdout) { should eq '' }
+  end
+end
+
+control 'cis-dil-benchmark-6.1.12' do
+  title 'Ensure no ungrouped files or directories exist'
+  desc  "Sometimes when administrators delete users or groups from the system they neglect to remove all files owned by those users or groups.\n\nRationale: A new user who is assigned the deleted user's user ID or group ID may then end up \"owning\" these files, and thus have more access on the system than was intended."
+  impact 1.0
+
+  tag cis: 'distribution-independent-linux:6.1.12'
+  tag level: 1
+
+  describe command("df --local -P | awk '{ if (NR!=1) print $6 }' | xargs -I '{}' find '{}' -xdev -nogroup") do
+    its(:stdout) { should eq '' }
+  end
+end
+
+control 'cis-dil-benchmark-6.1.13' do
+  title 'Audit SUID executables'
+  desc  "The owner of a file can set the file's permissions to run with the owner's or group's permissions, even if the user running the program is not the owner or a member of the group. The most common reason for a SUID program is to enable users to perform functions (such as changing their password) that require root privileges.\n\nRationale: There are valid reasons for SUID programs, but it is important to identify and review such programs to ensure they are legitimate."
+  impact 0.0
+
+  tag cis: 'distribution-independent-linux:6.1.13'
+  tag level: 1
+
+  describe 'cis-dil-benchmark-6.1.13' do
+    skip 'Not implemented'
+  end
+end
+
+control 'cis-dil-benchmark-6.1.14' do
+  title 'Audit SGID executables'
+  desc  "The owner of a file can set the file's permissions to run with the owner's or group's permissions, even if the user running the program is not the owner or a member of the group. The most common reason for a SGID program is to enable users to perform functions (such as changing their password) that require root privileges.\n\nRationale: There are valid reasons for SGID programs, but it is important to identify and review such programs to ensure they are legitimate. Review the files returned by the action in the audit section and check to see if system binaries have a different md5 checksum than what from the package. This is an indication that the binary may have been replaced."
+  impact 0.0
+
+  tag cis: 'distribution-independent-linux:6.1.14'
+  tag level: 1
+
+  describe 'cis-dil-benchmark-6.1.14' do
+    skip 'Not implemented'
   end
 end
