@@ -52,8 +52,8 @@ control 'cis-dil-benchmark-5.3.1' do # rubocop:disable Metrics/BlockLength
     describe.one do
       %w(common-password system-auth).each do |f|
         describe file("/etc/pam.d/#{f}") do
-          its(:content) { should match(/^password\s+requisite pam_pwquality\.so (\S+\s+)*retry=[3210]/) }
-          its(:content) { should match(/^password\s+requisite pam_pwquality\.so (\S+\s+)*try_first_pass/) }
+          its(:content) { should match(/^password\s+requisite pam_pwquality\.so (\S+\s+)*retry=[3210]/) } # '\s+' after 'password' fixes the regex to account for extra whitespaces introduced by Ansible's PAM module. This fixes 8 false failed controls.
+          its(:content) { should match(/^password\s+requisite pam_pwquality\.so (\S+\s+)*try_first_pass/) } # '\s+' after 'password' fixes the regex to account for extra whitespaces introduced by Ansible's PAM module. This fixes 8 false failed controls.
         end
       end
     end
@@ -92,11 +92,11 @@ control 'cis-dil-benchmark-5.3.3' do
   describe.one do
     %w(common-password system-auth).each do |f|
       describe file("/etc/pam.d/#{f}") do
-        its(:content) { should match(/^password\s+(\S+\s+)+pam_unix\.so (\S+\s+)*remember=([56789]|[1-9][0-9]+)/) }
+        its(:content) { should match(/^password\s+(\S+\s+)+pam_unix\.so (\S+\s+)*remember=([56789]|[1-9][0-9]+)/) } # '\s+' after 'password' fixes the regex to account for extra whitespaces introduced by Ansible's PAM module. This fixes 8 false failed controls.
       end
 
       describe file("/etc/pam.d/#{f}") do
-        its(:content) { should match(/^password\s+(\S+\s+)+pam_pwhistory\.so (\S+\s+)*remember=([56789]|[1-9][0-9]+)/) }
+        its(:content) { should match(/^password\s+(\S+\s+)+pam_pwhistory\.so (\S+\s+)*remember=([56789]|[1-9][0-9]+)/) } # '\s+' after 'password' fixes the regex to account for extra whitespaces introduced by Ansible's PAM module. This fixes 8 false failed controls.
       end
     end
   end
