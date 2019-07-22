@@ -86,6 +86,7 @@ control 'cis-dil-benchmark-6.1.3' do
       it { should_not be_readable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
       it { should_not be_writable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
       it { should_not be_executable.by 'owner' }
+      it { should_not be_readable.by 'group' }
       it { should_not be_writable.by 'group' }
       it { should_not be_executable.by 'group' }
       it { should_not be_readable.by 'other' }
@@ -152,6 +153,7 @@ control 'cis-dil-benchmark-6.1.5' do
       it { should_not be_readable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
       it { should_not be_writable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
       it { should_not be_executable.by 'owner' }
+      it { should_not be_readable.by 'group' }
       it { should_not be_writable.by 'group' }
       it { should_not be_executable.by 'group' }
       it { should_not be_readable.by 'other' }
