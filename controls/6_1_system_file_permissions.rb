@@ -83,9 +83,10 @@ control 'cis-dil-benchmark-6.1.3' do
   shadow_files.each do |f|
     describe file(f) do
       it { should exist }
-      it { should be_readable.by 'owner' }
-      it { should be_writable.by 'owner' }
+      it { should_not be_readable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
+      it { should_not be_writable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
       it { should_not be_executable.by 'owner' }
+      it { should_not be_readable.by 'group' }
       it { should_not be_writable.by 'group' }
       it { should_not be_executable.by 'group' }
       it { should_not be_readable.by 'other' }
@@ -149,9 +150,10 @@ control 'cis-dil-benchmark-6.1.5' do
   gshadow_files.each do |f|
     describe file(f) do
       it { should exist }
-      it { should be_readable.by 'owner' }
-      it { should be_writable.by 'owner' }
+      it { should_not be_readable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
+      it { should_not be_writable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
       it { should_not be_executable.by 'owner' }
+      it { should_not be_readable.by 'group' }
       it { should_not be_writable.by 'group' }
       it { should_not be_executable.by 'group' }
       it { should_not be_readable.by 'other' }
@@ -179,8 +181,10 @@ control 'cis-dil-benchmark-6.1.6' do
     it { should be_readable.by 'owner' }
     it { should be_writable.by 'owner' }
     it { should_not be_executable.by 'owner' }
+    it { should be_readable.by 'group' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
     it { should_not be_writable.by 'group' }
     it { should_not be_executable.by 'group' }
+    it { should be_readable.by 'other' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
     it { should_not be_writable.by 'other' }
     it { should_not be_executable.by 'other' }
     its(:uid) { should cmp 0 }
@@ -201,9 +205,10 @@ control 'cis-dil-benchmark-6.1.7' do
 
   describe file('/etc/shadow-') do
     it { should exist }
-    it { should be_readable.by 'owner' }
-    it { should be_writable.by 'owner' }
+    it { should_not be_readable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
+    it { should_not be_writable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
     it { should_not be_executable.by 'owner' }
+    it { should_not be_readable.by 'group' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
     it { should_not be_writable.by 'group' }
     it { should_not be_executable.by 'group' }
     it { should_not be_readable.by 'other' }
@@ -254,9 +259,10 @@ control 'cis-dil-benchmark-6.1.9' do
 
   describe file('/etc/gshadow-') do
     it { should exist }
-    it { should be_readable.by 'owner' }
-    it { should be_writable.by 'owner' }
+    it { should_not be_readable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
+    it { should_not be_writable.by 'owner' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
     it { should_not be_executable.by 'owner' }
+    it { should_not be_readable.by 'group' } # Bring the /etc/passwd,group,shadow,... file permissions in line with CIS AL2 Benchmark v1.0.0 recommendations.
     it { should_not be_writable.by 'group' }
     it { should_not be_executable.by 'group' }
     it { should_not be_readable.by 'other' }
